@@ -1,13 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-Created on Tue Sep  5 13:58:41 2023
-
-@author: mrm
-"""
-
-
-# -*- coding: utf-8 -*-
-"""
 Created on Fri Aug 11 20:14:02 2023
 
 @author: mrm
@@ -33,6 +25,7 @@ class model(object):
     taup = 200
     thetap = 0
     init_val = 0
+    lift = 2
     
 class pid(object):
     """
@@ -165,12 +158,12 @@ def calc_response(t,xm,xc,mode=False,arwnet =False,valvechar = False):
         # which is 12 seconds after the error sample send to the controller. Not quite accurate of actual representation.
         
         # simulate imperfect valve characteristic
-        #lift_char = 2
-        #op_tr[i] = op[i]/100*10
-        #op_out[i] = op_tr[i]**(lift_char)
-        # action to refine imperfect valve characteristic
-        
-        op_out[i] = op[i]
+        if valvechar == True:
+            lift_char = xm.lift
+            op_tr[i] = op[i]/100*10
+            op_out[i] = op_tr[i]**(lift_char)
+        else:
+            op_out[i] = op[i]
         
         # simulate time delay
         ndelay = int(np.ceil(thetap/delta_t))
@@ -196,53 +189,76 @@ def calc_response(t,xm,xc,mode=False,arwnet =False,valvechar = False):
         #op_itplt = [op_out[0],op[t_interpolate[1]-5],op_out[t_interpolate[2]-5],op_out[t_interpolate[3]-5],op_out[num_index-10]]
     return (pv,op)
 
+def auto():
+    model.num_index = 1000
+    model.Kp = 1.3
+    model.taup = 15
+    model.thetap = 7
+    model.init_val = 0
+
+    t = np.linspace(0,model.num_index,model.num_index+1)
+
+    sp = np.zeros(model.num_index+1)*30  # set point
+    sp[50:600] = 70
+    sp[600:] = 30
+    pid.sp = sp
+
+    pid.Kc = 2
+    pid.tauI = 30
+    pid.tauD = 0
+    pid.op_hi = 100
+    pid.op_lo = 0
+    
+    (pv,op) = calc_response(t,model,pid)
+
+    # plotting
+    plt.figure()
+    plt.subplot(2,1,1)
+    plt.title('PID Response')
+    plt.plot(t,pv,'b',linewidth=2, label='PV')
+    plt.plot(t,sp,'k--',linewidth=2, label='SP')
+    plt.xlabel('Time')
+    plt.ylabel('Response')
+    plt.legend()
+    plt.subplot(2,1,2)
+    plt.plot(t,op,'r',linewidth=2, label='OP')
+    plt.xlabel('Time')
+    plt.ylabel('Response')
+    plt.legend()
 
 
-model.num_index = 1000
-model.Kp = 1.3
-model.taup = 15
-model.thetap = 7
-model.init_val = 0
+def valve_generated():
+    model.num_index = 1000
+    model.Kp = 1.3
+    model.taup = 15
+    model.thetap = 7
+    model.init_val = 0
 
-t = np.linspace(0,model.num_index,model.num_index+1)
+    t = np.linspace(0,model.num_index,model.num_index+1)
 
-sp = np.zeros(model.num_index+1)*30  # set point
-sp[50:600] = 70
-sp[600:] = 30
-pid.sp = sp
+    sp = np.zeros(model.num_index+1)*30  # set point
+    sp[50:600] = 70
+    sp[600:] = 30
+    pid.sp = sp
 
-pid.Kc = 2
-pid.tauI = 30
-pid.tauD = 0
-pid.op_hi = 100
-pid.op_lo = 0
+    pid.Kc = 2
+    pid.tauI = 30
+    pid.tauD = 0
+    pid.op_hi = 100
+    pid.op_lo = 0
+    
+    (pv,op)=(pv,op) = calc_response(t,model,pid, mode = True, valvechar = True)
+    # interpolate
+    intplt = interpolate.interp1d(op_itplt,pv_itplt)
+    opnew = np.linspace(0,100,11)
+    pvnew = intplt(opnew)
 
-(pv,op) = calc_response(t,model,pid,mode = False, arwnet = True,valvechar = False)
+    plt.figure()
+    pic = plt.plot(opnew,pvnew,label='Valve Characteristic')
+    plt.ylabel('OP')
+    plt.xlabel('PV')
+    plt.legend()
+    return pic 
 
-# plotting
-plt.figure(1)
-plt.subplot(2,1,1)
-plt.title('PID Response')
-plt.plot(t,pv,'b',linewidth=2, label='PV')
-plt.plot(t,sp,'k--',linewidth=2, label='SP')
-plt.xlabel('Time')
-plt.ylabel('Response')
-plt.legend()
-plt.subplot(2,1,2)
-plt.plot(t,op,'r',linewidth=2, label='OP')
-plt.xlabel('Time')
-plt.ylabel('Response')
-plt.legend()
-
-
-# interpolate
-
-#intplt = interpolate.interp1d(op_itplt,pv_itplt)
-#opnew = np.linspace(0,100,11)
-#pvnew = intplt(opnew)
-
-#plt.figure(2)
-#plt.plot(opnew,pvnew,label='Valve Characteristic')
-#plt.ylabel('OP')
-#plt.xlabel('PV')
-#plt.legend()
+auto()
+valve_generated()

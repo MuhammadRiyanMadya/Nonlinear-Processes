@@ -43,11 +43,13 @@ class flakes():
         for i in range(0, self.time + 1):
                 t.append(i)    
         
-        self.u = step
-        u = []
+        self.u = []
         for i in range(0, self.time + 1):
-                u.append(0)
-          
+                self.u.append(0)
+        for keys,values in step():
+            for n in range(keys,len(self.u)):
+                self.u[keys]= values
+            
         uf = interpolate.interp1d(t,u)
         
         self.pv = [0]
@@ -56,7 +58,7 @@ class flakes():
                 delta_t = [0,1]
             else:
                 delta_t = [t[i-1],t[i]]
-            yt = integrate.odeint(model,pv[i],delta_t,args=(uf,self.Kp,self.taup,self.thetap))
+            yt = integrate.odeint(self.model(,pv[i],delta_t,args=(uf,self.Kp,self.taup,self.thetap))
             self.pv.append(yt[1,0])
 
         del self.pv[0]

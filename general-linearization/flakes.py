@@ -1,7 +1,6 @@
 #! usr/bin/env python3
 
-"""Module generate: generating process system model responses"""
-
+"""Module flakes: Emerging process control technology"""
 
 from scipy import integrate, interpolate
 import matplotlib.pyplot as plt
@@ -9,7 +8,7 @@ import pandas as pd
 
 class flakes():
     def __init__(self):
-        self.time   = 0
+        self.period   = 0
         self.name   = 'fopdt'
         self.Kp     = None
         self.taup   = None
@@ -30,37 +29,51 @@ class flakes():
                 u = uf(0)
             dydt = (Kp*u - y)/taup
             return dydt
-
+        
+    def __timepoint(self, period, time0 = 0):
+        
+        self.period = period
+        for i in range(time0, self.period + 1):
+                self.t.append(i)      
+        return 
+    
+    def __upoint(self, myinput:dict , input0):
+        
+        for i in range(0,len(self.t)):
+            self.u.append(input0)
+            
+        for keys,values in myinput.items():
+            for n in range(keys,len(self.u)):
+                self.u[n]= values
+                
+        if len(self.u) == 0:
+            print("The input change for the system is empty. \
+The time period must be defined first")
+        return
+        
     def response(self,
+                 period     :int,
                  step       :dict,
                  Kp         :int,
                  taup       :int,
                  thetap     :int = 0,
                  IV         :int = 0,
-                 Input0     :int = 0,
+                 input0     :int = 0,
                  time0      :int = 0,
                  filename   :str = 'Step_Data_1',
                  save       :bool = False
                  ):
         
+        self.period = period
         self.Kp = Kp
         self.taup = taup
         self.thetap = thetap
-
-        for i in range(time0, self.time + 1):
-                self.t.append(i)    
-        
-        for i in range(0, self.time + 1):
-                self.u.append(Input0)
-                
-        for keys,values in step.items():
-            for n in range(keys,len(self.u)):
-                self.u[n]= values
-            
+        self.__timepoint(self.period, time0)
+        self.__upoint(step, input0)
         uf = interpolate.interp1d(self.t,self.u)
-        
         self.pv = [IV]
-        for i in range(0,self.time + 1):
+        
+        for i in range(0,self.period + 1):
             if i < 1:
                 delta_t = [0,1]
             else:
@@ -100,4 +113,9 @@ class flakes():
             self.graph([data[0], data[2]])
         
         return df_np
-    
+
+#test
+steamer = flakes()
+steamer.response(100,{20:30}, 1, 1)
+#print(steamer.u)
+#print(steamer.pv)

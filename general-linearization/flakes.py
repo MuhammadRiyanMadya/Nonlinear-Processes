@@ -8,9 +8,9 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 class flakes():
-    def __init__(self, time = 0, name = 'fopdt'):
-        self.time   = time
-        self.name   = name
+    def __init__(self):
+        self.time   = 0
+        self.name   = 'fopdt'
         self.Kp     = None
         self.taup   = None
         self.thetap = None
@@ -52,6 +52,7 @@ class flakes():
         
         for i in range(0, self.time + 1):
                 self.u.append(Input0)
+                
         for keys,values in step.items():
             for n in range(keys,len(self.u)):
                 self.u[n]= values
@@ -72,11 +73,31 @@ class flakes():
 
         return dt
 
-    def graph(self,data: dict, show = True ):
+    def graph(self,data, show = True ):
         for i in range(1, len(data) + 1):
             plt.figure(i)
-            for n in data:
-                plt.plot(n[0],n[1],label= 'process')
-                if show == True:
-                    plt.show()
+            plt.plot(data[0],data[1],label= 'process')
+            if show == True:
+                plt.show()
+                    
+    def file(self,
+             title,
+             sheet,
+             column,
+             bottom_row,
+             show: bool = True,
+             hdr = 0
+             ):
+                
+        df = pd.read_excel(title, sheet_name = sheet, usecols = column,header = hdr)
+        df_np = df.values[:int(bottom_row)]
+        self.t = df_np[:,0]
+        self.u = df_np[:,1]
+        self.pv = df_np[:,2]
+        data = [self.t, self.u, self.pv]
+        if show == True:
+            self.graph([data[0], data[1]])
+            self.graph([data[0], data[2]])
         
+        return df_np
+    

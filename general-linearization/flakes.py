@@ -37,19 +37,19 @@ class flakes():
                 self.t.append(i)      
         return 
     
-    def __upoint(self, myinput:dict , input0):
-        
+    def __steppoint(self, myinput:dict , input0):
+        sig = []
         for i in range(0,len(self.t)):
-            self.u.append(input0)
+            sig.append(input0)
             
         for keys,values in myinput.items():
-            for n in range(keys,len(self.u)):
-                self.u[n]= values
+            for n in range(keys,len(sig)):
+                sig[n]= values
                 
-        if len(self.u) == 0:
+        if len(sig) == 0:
             print("The input change for the system is empty. \
 The time period must be defined first")
-        return
+        return sig
         
     def response(self,
                  period     :int,
@@ -69,7 +69,7 @@ The time period must be defined first")
         self.taup = taup
         self.thetap = thetap
         self.__timepoint(self.period, time0)
-        self.__upoint(step, input0)
+        self.u = self.__steppoint(step, input0)
         uf = interpolate.interp1d(self.t,self.u)
         self.pv = [IV]
         
@@ -113,6 +113,21 @@ The time period must be defined first")
             self.graph([data[0], data[2]])
         
         return df_np
+    def pid(self,
+            sp: dict,
+            Kc: int,
+            Tc: int,
+            Td: int = 0,
+            arwnet: bool = False,
+            sp0 = 0,
+           ):
+        sp = self.__steppoint(sp, sp0)
+        for i in range(0,len(self.t)):
+            e = self.pv[i] - sp[i]
+            
+        return op 
+            
+
 
 #test
 steamer = flakes()
